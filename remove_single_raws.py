@@ -14,7 +14,6 @@ def find_single_raws(path, remove_files=False):
 	dir_list_lower = [x.lower() for x in dir_list]
 	
 	for filename in dir_list:
-		
 		split_filename = filename.split('.')
 		
 		if len(split_filename) == 1:
@@ -45,6 +44,10 @@ def find_single_raws(path, remove_files=False):
 			os.remove(filename)
 			
 		return True
+	else:
+		print('# READONLY MODE')
+		for filename in single_raws:
+			print(filename)
 	
 	return sorted(single_raws)
 
@@ -52,7 +55,10 @@ if __name__ == '__main__':
 	""" Do it """
 	
 	if len(sys.argv) > 1:
-		find_single_raws(sys.argv[1], remove_files=True)
+		if len(sys.argv) >= 2:
+			find_single_raws(sys.argv[1], remove_files=False)
+		else:
+			find_single_raws(sys.argv[1], remove_files=True)
 	else:
 		print('Needs path to image dir')
 

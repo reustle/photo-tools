@@ -4,8 +4,11 @@ import Image
 import ExifTags
 import multiprocessing
 
-def build_preview_image(filename, output_filename):
+def build_preview_image(details):
 	""" Generate a single preview image """
+	
+	filename = details['input_file']
+	output_filename = details['output_file']
 	
 	# Define goal preview size
 	preview_size = 2048, 2048
@@ -37,7 +40,7 @@ def build_preview_image(filename, output_filename):
 	# Save the preview file
 	img.save(output_filename, 'JPEG')
 
-def generate_previews(path):
+def generate_previews(path, num_workers=3):
 	""" Generate previews for all jpgs in the given path """
 	
 	# Make sure the path has a trailing slash
@@ -60,15 +63,23 @@ def generate_previews(path):
 		if len(split_filename) > 1 and split_filename[1] == 'jpg':
 			jpg_list.append(path + filename)
 	
+	jobs_list = []
+	
 	for filename in jpg_list:
 		
 		output_filename = filename.replace(path, path + 'previews/')
 		
-		subproc = multiprocessing.Process(target=build_preview_image, args=(filename, output_filename,))
-		subproc.start()
+		jobs_list.append({
+			'input_file' : filename,
+			'output_file' : output_filename,
+		})
+	
+	# Create and start worker pool
+	worker_pool = multiprocessing.Pool(num_workers)
+	worker_pool.map(build_preview_image, jobs_list)
 		
 if __name__ == '__main__':
-	""" Do it """
+	""" Takes a directory, and creates small versions of all found .jpg files """
 	
 	if len(sys.argv) > 1:
 		generate_previews(sys.argv[1])

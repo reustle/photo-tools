@@ -48,17 +48,26 @@ def find_single_raws(path, remove_files=False):
 		print('# READONLY MODE')
 		for filename in single_raws:
 			print(filename)
+		
+		print('# Will remove ' + str(len(single_raws)) + ' of ' + str(len(dir_list_lower)) + ' files')
 	
 	return sorted(single_raws)
 
 if __name__ == '__main__':
 	""" Do it """
 	
-	if len(sys.argv) > 1:
-		if len(sys.argv) >= 2:
-			find_single_raws(sys.argv[1], remove_files=False)
+	args_list = sys.argv
+	if args_list[0] == 'python':
+		args_list = args_list[1:]
+	
+	
+	if len(args_list) > 1:
+		if len(args_list) >= 3:
+			# Pass README as 2nd arg to use readonly mode
+			
+			find_single_raws(args_list[1], remove_files=False)
 		else:
-			find_single_raws(sys.argv[1], remove_files=True)
+			find_single_raws(args_list[1], remove_files=True)
 	else:
 		print('Needs path to image dir')
 

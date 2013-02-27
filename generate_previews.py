@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import Image
 import ExifTags
 import multiprocessing
@@ -74,10 +75,32 @@ def generate_previews(path, num_workers=3):
 			'output_file' : output_filename,
 		})
 	
+	# Create separate worker to constantly monitor size of dir
+	monitor_proc = multiprocessing.Process(target=monitor_output, args=(len(jpg_list), path + 'previews/'))
+	monitor_proc.start()
+	
 	# Create and start worker pool
 	worker_pool = multiprocessing.Pool(num_workers)
 	worker_pool.map(build_preview_image, jobs_list)
+
+def monitor_output(total_jobs, path):
+	while True:
+		num_previews = len(os.listdir(path))
 		
+		if num_previews == total_jobs:
+			print('Complete')
+			break
+		
+		percent_done = num_previews / (total_jobs + 1.0)
+		percent_done = percent_done * 100
+		percent_done = int(percent_done)
+		
+		output = str(num_previews) + '/' + str(total_jobs)
+		output += ' (' + str(percent_done) + '%)'
+
+		print(output)
+		time.sleep(1)
+
 if __name__ == '__main__':
 	""" Takes a directory, and creates small versions of all found .jpg files """
 	

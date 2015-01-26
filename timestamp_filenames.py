@@ -2,11 +2,12 @@ import os
 import sys
 import time
 import Image
+import random
 import ExifTags
 from pprint import pprint
 
 
-def rename_files(path, ADD_12_HOURS=False):
+def rename_files(path, ADD_TIME_SHIFT=False):
 	""" Takes in a directory and renames files to their creation time """
 	
 	allowed_extensions = ['jpg', 'jpeg', 'mp4', 'mov']
@@ -36,7 +37,7 @@ def rename_files(path, ADD_12_HOURS=False):
 		
 		# If it is an image, read the EXIF data
 		# otherwise, fall back to file creation time
-		if extension == 'jpg' and not ADD_12_HOURS:
+		if extension == 'jpg' and not ADD_TIME_SHIFT:
 			# Open the image for reading
 			img = Image.open(filename)
 			
@@ -53,8 +54,8 @@ def rename_files(path, ADD_12_HOURS=False):
 			# Fall back to mtime
 			created_time = float(os.path.getmtime(filename))
 			
-			if ADD_12_HOURS:
-				created_time += 43200
+			if ADD_TIME_SHIFT:
+				created_time += 3600 * ADD_TIME_SHIFT
 			
 			created_time = time.strftime('%Y%m%d-%H%M%S', time.localtime(created_time))
 		
@@ -65,14 +66,19 @@ def rename_files(path, ADD_12_HOURS=False):
 		# Keep track of our new filenames, incase we need have duplicates
 		if new_filename in new_filenames:
 			print new_filename + ' already exists'
-			new_filename += '-2'
+			new_filename += '-' + random.randint(100,999)
 		
 		new_filenames.append(new_filename)
+		
+		# Print notification
+		if False:
+			old_filename = filename.replace(path, '')
+			print( '{0} => {1}'.format(old_filename, new_filename) )
+			continue
 		
 		# Rename the file
 		new_full_filename = path + new_filename
 		
-		#print(filename + ' -> ' + new_full_filename)
 		os.rename(filename, new_full_filename)
 		
 if __name__ == '__main__':
@@ -80,11 +86,17 @@ if __name__ == '__main__':
 	
 	if len(sys.argv) > 1:
 		
-		if len(sys.argv) > 2 and sys.argv[2] == '--add-12-hours':
-			rename_files(sys.argv[1], ADD_12_HOURS=True)
+		if len(sys.argv) > 3 and sys.argv[2] == '--time-shift':
+			try:
+				offset = float(sys.argv[3])
+				print('Offset set to {0}'.format(offset))
+			except:
+				print('Invalid Offset')
+			
+			rename_files(sys.argv[1], ADD_TIME_SHIFT=offset)
 		else:
 			rename_files(sys.argv[1])
 			
 	else:
-		print('Needs path to image dir. Use like timestamp_filenames.py /foo/bar/ --ad-12-hours')
+		print('Needs path to image dir. Use like timestamp_filenames.py /foo/bar/ --time-shift 12')
 	

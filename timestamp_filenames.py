@@ -66,7 +66,7 @@ def rename_files(path, ADD_TIME_SHIFT=False):
 		# Keep track of our new filenames, incase we need have duplicates
 		if new_filename in new_filenames:
 			print new_filename + ' already exists'
-			new_filename += '-' + random.randint(100,999)
+			new_filename += '-' + str(random.randint(100,999))
 		
 		new_filenames.append(new_filename)
 		
@@ -76,9 +76,16 @@ def rename_files(path, ADD_TIME_SHIFT=False):
 			print( '{0} => {1}'.format(old_filename, new_filename) )
 			continue
 		
-		# Rename the file
+		# Generate new filename
 		new_full_filename = path + new_filename
 		
+		# See if that file exists
+		is_file = os.path.isfile(new_full_filename)
+		if is_file:
+			print(new_full_filename + ' already exists, adding random num')
+			new_full_filename += '-' + str(random.randint(100,999))
+		
+		# Rename the file
 		os.rename(filename, new_full_filename)
 		
 if __name__ == '__main__':

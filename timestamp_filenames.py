@@ -6,8 +6,6 @@ import datetime
 from pprint import pprint
 from PIL import Image, ExifTags
 
-DEBUG = False
-
 def read_directory(path):
 	""" Return a list of all images in a dir """
 	
@@ -58,7 +56,7 @@ def read_timestamp(filename):
 	
 	return created_time
 
-def rename_files(path, time_shift=None):
+def rename_files(path, time_shift=None, debug_mode=True):
 	""" Takes in a directory and renames files to their creation time """
 	
 	# Load file list
@@ -79,17 +77,24 @@ def rename_files(path, time_shift=None):
 		
 		# Generate the new filename
 		extension = filename.lower().split('.')[-1]
-		new_filename = created_time.strftime('%Y%m%d-%H%M%S') + '.' + extension
+		new_filename = '{timestamp}.{extension}'.format(**{
+			'timestamp' : created_time.strftime('%Y%m%d-%H%M%S'),
+			'extension' : extension,
+		})
 		
 		# Keep track of our new filenames, incase we need have duplicates
 		if new_filename in new_filenames:
-			print new_filename + ' already exists'
-			new_filename += '-' + str(random.randint(100,999))
+			# This filename already exists, adding random numbers
+			new_filename = '{timestamp}-{randomint}.{extension}'.format(**{
+				'timestamp' : created_time.strftime('%Y%m%d-%H%M%S'),
+				'randomint' : random.randint(100,999),
+				'extension' : extension,
+			})
 		
 		new_filenames.append(new_filename)
 		
 		# Print notification
-		if DEBUG:
+		if debug_mode:
 			old_filename = filename.replace(path, '')
 			print( '{0} => {1}'.format(old_filename, new_filename) )
 			continue
@@ -104,25 +109,23 @@ def rename_files(path, time_shift=None):
 			new_full_filename += '-' + str(random.randint(100,999))
 		
 		# Rename the file
-		if not DEBUG:
+		if not debug_mode:
 			os.rename(filename, new_full_filename)
 		
 if __name__ == '__main__':
-	""" Takes a directory, and renames files (jpg, mov, mp4) to use timestamp """
+	""" Takes a directory, and renames media files (jpg, mov, mp4) to use timestamp """
 	
-	if len(sys.argv) > 1:
-		
-		if len(sys.argv) > 3 and sys.argv[2] == '--time-shift':
-			try:
-				time_shift = float(sys.argv[3])
-				print('Time-Shift set to {0}'.format(time_shift))
-			except:
-				print('Invalid Offset')
-			
-			rename_files(sys.argv[1], time_shift=time_shift)
-		else:
-			rename_files(sys.argv[1])
-			
-	else:
-		print('Run like: timestamp_filenames.py /foo/bar/ --time-shift 2')
+	if len(sys.argv) != 2:
+		print('Run like: timestamp_filenames.py /photos/dir/')
+	
+	debug_mode = (raw_input('Debug mode (y/n): ').lower() == 'y')
+	time_shift = float(raw_input('Hour offset (eg -4): '))
+	
+	rename_files(sys.argv[1], time_shift=time_shift, debug_mode=debug_mode)
+	
+	# Print settings
+	print('Finished with offset={offset} and debug={debug}'.format(**{
+		'offset' : time_shift,
+		'debug' : debug_mode,
+	}))
 	
